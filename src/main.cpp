@@ -4,21 +4,14 @@
 #include <string>
 #include <vector>
 
+#include "error_handling.h"
+
 bool hadError = false;
 
 using namespace std;
 
 void run(string source){
     cout << source << endl; // for now.
-}
-
-void report(int line, string where, string message){
-    cout << "[line " << line << "] Error" << where << ": " << message;
-    hadError = true; 
-}
-
-void error(int line, string message){
-    report(line, "", message);
 }
 
 void runFile(const string path){
