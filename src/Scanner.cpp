@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include "Token.h"
+#include "TokenType.h"
 #include "error_handling.h"
 
 using namespace std;
@@ -25,7 +26,7 @@ class Scanner {
                 start = current;
                 scanToken();
             }
-            tokens.push_back(Token(TOKEN_EOF, "", nullptr, line));
+            tokens.push_back(Token(TOKEN_EOF, "", string(""), line));
             return tokens;
         }
 
@@ -38,7 +39,7 @@ class Scanner {
             addToken(type, "");
         }
 
-        void addToken(TokenType type, string literal){
+        void addToken(TokenType type, Literal literal){
             string text = source.substr(start,current-start);
             tokens.push_back(Token(type, text, literal, line));
         }
@@ -48,6 +49,47 @@ class Scanner {
             if(source[current+1] != expected) return false;
             current++;
             return true;
+        }
+
+        char peek(){
+            if(isAtEnd()) return '\0';
+            return source.charAt(current);
+        }
+
+        char peekNext{
+            if(current+1 >= source.size()) return '\0';
+            return source[current+1];
+        }
+
+        void string(){
+            while(peek() != '"' && !isAtEnd()){
+                if (peek() == '\n') line++;
+                advance();
+            }
+            if(isAtEnd()){
+                error(line, "Unterminated string.");
+                return;
+            }
+
+            advance();
+
+            string value = source.substr(start+1, current-1);
+            addToken(STRING, Literal(value));
+        }
+
+        bool isDigit(c){
+            return c >= '0' && c <= '9';
+        }
+
+        void number(){
+            while(isDigit(peek())) advance();
+
+            // Look for a fractional part.
+            if(peek() == '.' && isDigit(peekNext())){
+                advance();
+                while(isDigit(peek())) advance();
+            }
+            addToken(NUMBER, stod(source.substr(start,current));
         }
 
         void scanToken(){
@@ -75,10 +117,30 @@ class Scanner {
                 case '>':
                     addToken(match('=') ? GREATER_EQUAL : GREATER);
                     break;
+                case '/':
+                    if ((match('/'))){
+                        while (peek()!= '\n' && isAtEnd()) advance();
+                    }else{
+                        addToken(SLASH);
+                    }
+                    break;
+                case ' ':
+                case '\r':
+                case '\t':
+                    break;
+                case '\n':
+                    line++; break;
+                case '"': string(); break;
+                
 
-                default : error(line, "Unexpected Character."); break;
+                default : 
+                    if(isDigit(c)){
+                        number();
+                    }else{
+                        error(line, "Unexpected Character."); break;
+                    }
 
             }
         }
 
-}
+};
